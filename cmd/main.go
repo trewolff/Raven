@@ -15,4 +15,9 @@ func main() {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
+	m := ui.SecondModel()
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		fmt.Println("Oh no!", err)
+		os.Exit(1)
+	}
 }
