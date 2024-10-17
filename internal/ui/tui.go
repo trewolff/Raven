@@ -10,25 +10,31 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Model struct {
-	choices  []string         // items on the to-do list
-	cursor   int              // which to-do list item our cursor is pointing at
-	selected map[int]struct{} // which to-do items are selected
-}
+type screen int
 
-func Splash() {
-	fmt.Println("SPLASH")
+var tickets = [...]string{"Ticket 1", "Ticket 2", "Ticket 3", "Ticket 4"}
+var alerts = [...]string{"Alert 1", "Alert 2", "Alert 3", "Alert 4"}
+var automations = [...]string{"Playbooks", "Actions", "Enrichments"}
+
+const (
+	splashScreen screen = iota
+	ticketsScreen
+	workTicketScreen
+	alertsScreen
+	automationsScreen
+)
+
+type Model struct {
+	currentScreen screen
+	cursor        int
+	choices       []string
 }
 
 func InitialModel() Model {
+	choices := []string{"Tickets", "Alerts", "Automations", "Exit"}
 	return Model{
-		// Our to-do list is a grocery list
-		choices: []string{"Buy carrots", "Buy celery", "Buy kohlrabi"},
-
-		// A map which indicates which choices are selected. We're using
-		// the  map like a mathematical set. The keys refer to the indexes
-		// of the `choices` slice, above.
-		selected: make(map[int]struct{}),
+		currentScreen: splashScreen,
+		choices:       choices,
 	}
 }
 
@@ -47,29 +53,70 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		// These keys should exit the program.
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
+		case "q":
+			m.currentScreen = splashScreen
+		case "esc":
+			if m.currentScreen == ticketsScreen {
+				m.currentScreen = splashScreen
+			} else if m.currentScreen == workTicketScreen {
+				m.currentScreen = ticketsScreen
 
+			} else if m.currentScreen == alertsScreen {
+				m.currentScreen = splashScreen
+
+			} else if m.currentScreen == automationsScreen {
+				m.currentScreen = splashScreen
+
+			}
 		// The "up" and "k" keys move the cursor up
 		case "up", "k":
-			if m.cursor > 0 {
+			if m.currentScreen == ticketsScreen && m.cursor > 0 {
+				m.cursor--
+			}
+			if m.currentScreen == alertsScreen && m.cursor > 0 {
+				m.cursor--
+			}
+			if m.currentScreen == splashScreen && m.cursor > 0 {
+				m.cursor--
+			}
+			if m.currentScreen == automationsScreen && m.cursor > 0 {
 				m.cursor--
 			}
 
 		// The "down" and "j" keys move the cursor down
 		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
+			if m.currentScreen == ticketsScreen && m.cursor < len(tickets)-1 {
+				m.cursor++
+			}
+			if m.currentScreen == alertsScreen && m.cursor < len(tickets)-1 {
+				m.cursor++
+			}
+			if m.currentScreen == splashScreen && m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+			if m.currentScreen == automationsScreen && m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
 
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
+			if m.currentScreen == ticketsScreen {
+				m.currentScreen = workTicketScreen
+			}
+			if m.currentScreen == splashScreen {
+				switch m.cursor {
+				case 0:
+					m.currentScreen = ticketsScreen
+				case 1:
+					m.currentScreen = alertsScreen
+				case 2:
+					m.currentScreen = automationsScreen
+				case 3:
+					return m, tea.Quit
+				}
 			}
 		}
 	}
@@ -79,34 +126,99 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) View() string {
-	// The header
-	s := "What should we buy at the market?\n\n"
+var (
+	boarderStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("63")).
+			Padding(1, 2)
 
-	// Iterate over our choices
+	titleStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("205")).
+			Bold(true).
+			Align(lipgloss.Center)
+
+	menuStyle = lipgloss.NewStyle().
+			Margin(1, 2)
+)
+
+func (m Model) splashView() string {
+	title := titleStyle.Render("Welcome to the ticketing system")
+	instructions := "Select one..."
+	menu := ""
 	for i, choice := range m.choices {
-
-		// Is the cursor pointing at this choice?
-		cursor := " " // no cursor
+		cursor := " "
 		if m.cursor == i {
-			cursor = ">" // cursor!
+			cursor = ">"
 		}
-
-		// Is this choice selected?
-		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
-			checked = "x" // selected!
-		}
-
-		// Render the row
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		menu += fmt.Sprintf("%s %s\n", cursor, choice)
 	}
+	return menuStyle.Render(boarderStyle.Render(fmt.Sprintf("%s\n\n%s%s", title, menu, instructions)))
+}
 
-	// The footer
-	s += "\nPress q to quit.\n"
+func (m Model) ticketsView() string {
+	title := titleStyle.Render("Tickets screen:")
+	instructions := "Use k/j to navigate and enter to select"
+	menu := ""
+	for i, ticket := range tickets {
+		cursor := " "
+		if m.cursor == i {
+			cursor = ">"
+		}
+		menu += fmt.Sprintf("%s %s\n", cursor, ticket)
+	}
+	return menuStyle.Render(boarderStyle.Render(fmt.Sprintf("%s\n\n%s%s", title, menu, instructions)))
+}
 
-	// Send the UI for rendering
-	return s
+func (m Model) alertsView() string {
+	title := titleStyle.Render("Alerts screen:")
+	instructions := "Use k/j to navigate and enter to select"
+	menu := ""
+	for i, alert := range alerts {
+		cursor := " "
+		if m.cursor == i {
+			cursor = ">"
+		}
+		menu += fmt.Sprintf("%s %s\n", cursor, alert)
+	}
+	return menuStyle.Render(boarderStyle.Render(fmt.Sprintf("%s\n\n%s%s", title, menu, instructions)))
+}
+
+func (m Model) automationsView() string {
+	title := titleStyle.Render("Automations screen:")
+	instructions := "Use k/j to navigate and enter to select"
+	menu := ""
+	for i, automation := range automations {
+		cursor := " "
+		if m.cursor == i {
+			cursor = ">"
+		}
+		menu += fmt.Sprintf("%s %s\n", cursor, automation)
+	}
+	return menuStyle.Render(boarderStyle.Render(fmt.Sprintf("%s\n\n%s%s", title, menu, instructions)))
+}
+
+func (m Model) workTicketView() string {
+	title := titleStyle.Render("Working on a ticket...")
+	instructions := "Press q to quit to the main menu"
+	// TODO:
+	return menuStyle.Render(boarderStyle.Render(fmt.Sprintf("%s\n\n%s", title, instructions)))
+}
+
+func (m Model) View() string {
+	switch m.currentScreen {
+	case splashScreen:
+		return m.splashView()
+	case ticketsScreen:
+		return m.ticketsView()
+	case alertsScreen:
+		return m.alertsView()
+	case automationsScreen:
+		return m.automationsView()
+	case workTicketScreen:
+		return m.workTicketView()
+	default:
+		return ""
+	}
 }
 
 const (
