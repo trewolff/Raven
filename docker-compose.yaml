@@ -13,6 +13,7 @@ services:
   database:
     # Official Postgres image from DockerHub (we use the last version)
     image: 'postgres:latest'
+    hostname: pghost
 
     # By default, a Postgres database is running on the 5432 port.
     # If we want to access the database from our computer (outside the container),
@@ -25,15 +26,16 @@ services:
       - 5432:5432
 
     environment:
-      POSTGRES_USER: username # The PostgreSQL user (useful to connect to the database)
-      POSTGRES_PASSWORD: password # The PostgreSQL password (useful to connect to the database)
-      POSTGRES_DB: default_database # The PostgreSQL default database (automatically created at first launch)
-
+      POSTGRES_DB: postgres # The PostgreSQL default database (automatically created at first launch)
+      #POSTGRES_DB: default_database
+    networks:
+      - postgres-network
     volumes:
         - postgres:/var/lib/postgresql/data
 
   pgadmin:
     image: dpage/pgadmin4
+    hostname: pgadminhost
     ports:
       - 15433:80
     env_file:
@@ -41,7 +43,6 @@ services:
     networks:
       - postgres-network
     volumes:
-      #- ${PWD}/pgadmin-data/:/var/lib/pgadmin/
       - pgadmin:/var/lib/pgadmin
     depends_on:
       - database
