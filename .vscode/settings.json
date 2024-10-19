@@ -1,0 +1,6 @@
+{
+    "json.schemaDownload.enable": true,
+    "json.validate.enable": false,
+    "http.proxySupport": "off",
+    "http.proxyStrictSSL": false
+}
