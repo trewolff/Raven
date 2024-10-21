@@ -6,7 +6,8 @@ info:
 paths:
   /v1/api/events:
     post:
-      tags: -openapi
+      tags:
+        - openapi
       operationId: ingestEvents
       requestBody:
         content:
