@@ -26,9 +26,12 @@ func NewDatabaseConnection() *sql.DB {
 	dbname := conf.PG_DB_NAME
 	sslmode := conf.PG_SSL_MODE
 	psqlInfo := fmt.Sprintf("host=%s post=%d user=%s pass=%s dbname=%s sslmode=%s", host, port, user, pass, dbname, sslmode)
-	db, _ = sql.Open(dbname, psqlInfo)
+	db, err := sql.Open(dbname, psqlInfo)
+	if err != nil {
+		log.Fatal("Error opening database", err)
+	}
 	db.SetMaxIdleConns(conf.PG_MAX_CONNS)
-	err := db.Ping()
+	err = db.Ping()
 	if err != nil {
 		log.Error("Ping error", err.Error())
 	}

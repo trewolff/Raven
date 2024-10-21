@@ -7,6 +7,17 @@ version: '3'
 # For example, a service, a server, a client, a database...
 # We use the keyword 'services' to start to create services.
 services:
+  raven-api:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    depends_on:
+      - database
+      - redis
   # The name of our service is "database"
   # but you can use the name of your choice.
   # Note: This may change the commands you are going to use a little bit.
@@ -46,6 +57,28 @@ services:
       - pgadmin:/var/lib/pgadmin
     depends_on:
       - database
+
+  redis:
+    image: "bitnami/redis:7.2.4"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_LOG_LEVEL=warning
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+
+  redis_sentinel:
+    image: "bitnami/redis-sentinel:7.2.4"
+    environment:
+      - REDIS_MASTER_HOST=redis
+      - REDIS_SENTINEL_QUORUM=1
+      - REDIS_MASTER_SET=redis_primary
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_SENTINEL_ANNOUNCE_HOSTNAMES=yes
+    depends_on:
+      - redis
+    ports:
+      - '26379:26379'
 
 networks:
   postgres-network:
