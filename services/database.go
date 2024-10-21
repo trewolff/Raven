@@ -6,6 +6,7 @@ import (
 	"raven/config"
 
 	"github.com/labstack/gommon/log"
+	_ "github.com/lib/pq"
 )
 
 type DatabaseService interface {

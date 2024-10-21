@@ -18,6 +18,6 @@ func main() {
 		databaseService,
 		cacheService,
 	)
-	echoRouter.POST("/ap1/v1/events", ravenApi.EventIngest)
+	echoRouter.POST("/api/v1/events", ravenApi.EventIngest)
 	echoRouter.Start(fmt.Sprintf("0.0.0.0:%d", *port))
 }
