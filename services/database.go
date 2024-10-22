@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"raven/config"
+	"raven/logging"
 
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
@@ -26,7 +27,8 @@ func NewDatabaseConnection() *sql.DB {
 	pass := conf.PG_PASS
 	dbname := conf.PG_DB_NAME
 	sslmode := conf.PG_SSL_MODE
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s pass=%s dbname=%s sslmode=%s", host, port, user, pass, dbname, sslmode)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port, user, pass, dbname, sslmode)
+	logging.Logger.Debug("psqlInfo=%s", psqlInfo)
 	db, err := sql.Open(conf.PG_CONNECTOR_TYPE, psqlInfo)
 	if err != nil {
 		log.Fatal("Error opening database: ", err.Error())
