@@ -4,12 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"raven/api"
+	"raven/logging"
 	"raven/services"
 
 	"github.com/labstack/echo/v4"
 )
 
 func main() {
+	logging.InitLogger()
 	var port = flag.Int("port", 8080, "Port for test HTTP server")
 	echoRouter := echo.New()
 	databaseService := services.NewDatabaseService(services.NewDatabaseConnection())

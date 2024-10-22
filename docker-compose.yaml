@@ -7,17 +7,6 @@ version: '3'
 # For example, a service, a server, a client, a database...
 # We use the keyword 'services' to start to create services.
 services:
-  raven-api:
-    env_file:
-      - .env
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - '8080:8080'
-    depends_on:
-      - database
-      - redis
   # The name of our service is "database"
   # but you can use the name of your choice.
   # Note: This may change the commands you are going to use a little bit.
@@ -25,7 +14,7 @@ services:
     # Official Postgres image from DockerHub (we use the last version)
     image: 'postgres:latest'
     hostname: pghost
-
+    restart: always
     # By default, a Postgres database is running on the 5432 port.
     # If we want to access the database from our computer (outside the container),
     # we must share the port with our computer's port.
@@ -39,6 +28,8 @@ services:
     environment:
       POSTGRES_DB: postgres # The PostgreSQL default database (automatically created at first launch)
       #POSTGRES_DB: default_database
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
     networks:
       - postgres-network
     volumes:
@@ -46,7 +37,6 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    hostname: pgadminhost
     ports:
       - 15433:80
     env_file:
@@ -66,6 +56,8 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - '6379:6379'
+    networks:
+      - postgres-network
 
   redis_sentinel:
     image: "bitnami/redis-sentinel:7.2.4"
@@ -79,6 +71,30 @@ services:
       - redis
     ports:
       - '26379:26379'
+    networks:
+      - postgres-network
+
+  raven-api:
+    #env_file:
+    #  - .env
+    restart: always
+    environment:
+      - RAVEN_PG_HOST=database
+      - RAVEN_PG_USER=postgres
+      - RAVEN_PG_PASS=postgres
+      - RAVEN_REDIS_URL=redis:236379
+      - RAVEN_PG_SSL_MODE=disable
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    depends_on:
+      - database
+      - redis
+      - pgadmin
+    networks:
+      - postgres-network
 
 networks:
   postgres-network:

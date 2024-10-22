@@ -26,15 +26,17 @@ func NewDatabaseConnection() *sql.DB {
 	pass := conf.PG_PASS
 	dbname := conf.PG_DB_NAME
 	sslmode := conf.PG_SSL_MODE
-	psqlInfo := fmt.Sprintf("host=%s post=%d user=%s pass=%s dbname=%s sslmode=%s", host, port, user, pass, dbname, sslmode)
-	db, err := sql.Open(dbname, psqlInfo)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s pass=%s dbname=%s sslmode=%s", host, port, user, pass, dbname, sslmode)
+	db, err := sql.Open(conf.PG_CONNECTOR_TYPE, psqlInfo)
 	if err != nil {
-		log.Fatal("Error opening database", err)
+		log.Fatal("Error opening database: ", err.Error())
+		panic(err)
 	}
 	db.SetMaxIdleConns(conf.PG_MAX_CONNS)
 	err = db.Ping()
 	if err != nil {
-		log.Error("Ping error", err.Error())
+		log.Error("Ping error: ", err.Error())
+		panic(err)
 	}
 	return db
 }
@@ -46,8 +48,8 @@ func NewDatabaseService(database *sql.DB) DatabaseService {
 }
 
 func (c *DefaultDatabaseService) WriteEvent(entityID string) (int8, error) {
-	insertStatement := `INSERT INTO events (entity_id, type)
-	VALUES($1, $2)
+	insertStatement := `INSERT INTO events (entity_id)
+	VALUES($1)
 	returning id AS event_id;
 	`
 	rows, err := c.database.Query(

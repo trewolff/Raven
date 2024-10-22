@@ -2,10 +2,16 @@ package api
 
 import (
 	"net/http"
+	"raven/logging"
 	"raven/services"
 
 	"github.com/labstack/echo/v4"
 )
+
+func HandleError(err error, statusCode int, message string) error {
+	logging.Logger.Error(err.Error())
+	return echo.NewHTTPError(statusCode, message)
+}
 
 type ServerInterface interface {
 	EventIngest(ctx echo.Context) error
@@ -27,5 +33,14 @@ func NewRavenAPI(
 }
 
 func (api *RavenAPI) EventIngest(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]interface{}{"data": "yep"})
+	var body map[string]interface{}
+	err := ctx.Bind(&body)
+	if err != nil {
+		HandleError(err, http.StatusBadRequest, "Invalid body in request")
+	}
+	eventId, err := api.databaseService.WriteEvent(body["event_id"].(string))
+	if err != nil {
+		HandleError(err, http.StatusInternalServerError, "Could not write event")
+	}
+	return ctx.JSON(http.StatusOK, map[string]interface{}{"event_id": eventId})
 }
