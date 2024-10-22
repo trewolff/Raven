@@ -11,7 +11,7 @@ import (
 )
 
 type DatabaseService interface {
-	WriteEvent(key string) (int8, error)
+	WriteEvent(key string) (string, error)
 }
 
 type DefaultDatabaseService struct {
@@ -49,22 +49,24 @@ func NewDatabaseService(database *sql.DB) DatabaseService {
 	}
 }
 
-func (c *DefaultDatabaseService) WriteEvent(entityID string) (int8, error) {
-	insertStatement := `INSERT INTO events (entity_id)
+func (c *DefaultDatabaseService) WriteEvent(eventID string) (string, error) {
+	insertStatement := `INSERT INTO events (event_id)
 	VALUES($1)
 	returning id AS event_id;
 	`
 	rows, err := c.database.Query(
 		insertStatement,
-		entityID,
+		eventID,
 	)
 	if err != nil {
-		return int8(0), err
+		return "", err
 	}
 	defer rows.Close()
-	var eventID int8
+	var rowID string
 	for rows.Next() {
-		rows.Scan(&eventID)
+		if err := rows.Scan(&rowID); err != nil {
+			logging.Logger.Error("Error scanning: ", err)
+		}
 	}
-	return eventID, nil
+	return rowID, nil
 }
