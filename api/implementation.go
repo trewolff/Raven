@@ -15,6 +15,7 @@ func HandleError(err error, statusCode int, message string) error {
 
 type ServerInterface interface {
 	EventIngest(ctx echo.Context) error
+	EventGet(ctx echo.Context) error
 }
 
 type RavenAPI struct {
@@ -43,4 +44,13 @@ func (api *RavenAPI) EventIngest(ctx echo.Context) error {
 		HandleError(err, http.StatusInternalServerError, "Could not write event")
 	}
 	return ctx.JSON(http.StatusOK, map[string]interface{}{"event_id": eventId})
+}
+
+func (api *RavenAPI) EventGet(ctx echo.Context) error {
+	eventID := ctx.Param("id")
+	eventData, err := api.databaseService.GetEvent(eventID)
+	if err != nil {
+		HandleError(err, http.StatusInternalServerError, "Could not get event")
+	}
+	return ctx.JSON(http.StatusOK, map[string]interface{}{"event_ids": eventData})
 }

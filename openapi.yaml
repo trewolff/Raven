@@ -14,3 +14,10 @@ paths:
           application/json:
             schema:
               type: object
+  /v1/api/events/{id}:
+    post:
+      tags:
+        - openapi
+      operationId: getEvents
+      parameters:
+        - id
