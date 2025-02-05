@@ -4,6 +4,16 @@ info:
   title: Raven API
 
 paths:
+  /v1/api/login:
+    post:
+      tags:
+        - openapi
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
   /v1/api/events:
     post:
       tags:

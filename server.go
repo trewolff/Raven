@@ -20,6 +20,7 @@ func main() {
 		databaseService,
 		cacheService,
 	)
+	echoRouter.POST("/api/v1/login", ravenApi.Login)
 	echoRouter.POST("/api/v1/events", ravenApi.EventIngest)
 	echoRouter.GET("/api/v1/events/:id", ravenApi.EventGet)
 	echoRouter.Start(fmt.Sprintf("0.0.0.0:%d", *port))
