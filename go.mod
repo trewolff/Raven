@@ -3,6 +3,8 @@ module raven
 go 1.22.7
 
 require (
+	github.com/alexsergivan/blog-examples/authentication v0.0.0-20221115100652-08b68b210058
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/labstack/gommon v0.4.2

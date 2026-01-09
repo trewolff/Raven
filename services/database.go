@@ -12,6 +12,7 @@ import (
 
 type DatabaseService interface {
 	WriteEvent(key string) (string, error)
+	GetEvent(key string) ([]string, error)
 }
 
 type DefaultDatabaseService struct {
@@ -69,4 +70,25 @@ func (c *DefaultDatabaseService) WriteEvent(eventID string) (string, error) {
 		}
 	}
 	return rowID, nil
+}
+
+func (c *DefaultDatabaseService) GetEvent(eventID string) ([]string, error) {
+	insertStatement := `SELECT id FROM events WHERE event_id = ($1)`
+	rows, err := c.database.Query(
+		insertStatement,
+		eventID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var rowIDs []string
+	var rowID string
+	for rows.Next() {
+		if err := rows.Scan(&rowID); err != nil {
+			logging.Logger.Error("Error scanning: ", err)
+		}
+		rowIDs = append(rowIDs, rowID)
+	}
+	return rowIDs, nil
 }
