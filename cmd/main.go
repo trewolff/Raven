@@ -3,14 +3,17 @@ package main
 import (
 	"net/http"
 	"raven/internal/api"
+	"raven/internal/services"
 )
 
 func main() {
 	router := api.NewRouter()
 	handlerConfig := api.HandlerConfig{
-		// Initialize configuration fields as needed
+		DatabaseService: services.NewDatabaseService(services.NewDatabaseConnection()),
+		CacheService:    services.NewCacheService(services.NewCacheConnection()),
 	}
 	handlers := api.NewHandlers(handlerConfig)
+
 	router.HandleFunc("PUT /api/v1/cases/new", handlers.CreateCase)
 	router.HandleFunc("GET /api/v1/cases", handlers.ListCases)
 	router.HandleFunc("GET /api/v1/cases/{id}", handlers.ReadCase)
