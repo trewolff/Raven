@@ -2,7 +2,8 @@ package api
 
 import (
 	"net/http"
-	"raven/internal/services"
+	"raven/internal/services/cache"
+	"raven/internal/services/database"
 )
 
 type ServerInterface interface {
@@ -17,14 +18,14 @@ type ServerInterface interface {
 
 type HandlerConfig struct {
 	Config          interface{}
-	DatabaseService services.DatabaseService
-	CacheService    services.CacheService
+	DatabaseService database.DatabaseService
+	CacheService    cache.CacheService
 }
 
 type Handlers struct {
 	Config          interface{}
-	databaseService services.DatabaseService
-	cacheService    services.CacheService
+	databaseService database.DatabaseService
+	cacheService    cache.CacheService
 }
 
 func NewHandlers(config HandlerConfig) ServerInterface {

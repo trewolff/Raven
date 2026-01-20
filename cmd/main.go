@@ -3,14 +3,22 @@ package main
 import (
 	"net/http"
 	"raven/internal/api"
-	"raven/internal/services"
+	"raven/internal/services/cache"
+	"raven/internal/services/database"
+	"raven/migrations"
 )
 
 func main() {
+	db := database.NewDatabaseConnection()
+	err := migrations.MigrateDatabase(db)
+	if err != nil {
+		panic("Failed to run migrations: " + err.Error())
+	}
+
 	router := api.NewRouter()
 	handlerConfig := api.HandlerConfig{
-		DatabaseService: services.NewDatabaseService(services.NewDatabaseConnection()),
-		CacheService:    services.NewCacheService(services.NewCacheConnection()),
+		DatabaseService: database.NewDatabaseService(db),
+		CacheService:    cache.NewCacheService(cache.NewCacheConnection()),
 	}
 	handlers := api.NewHandlers(handlerConfig)
 
